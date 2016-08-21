@@ -1,0 +1,31 @@
+{
+  "name": "heroku-chat",
+	"version": "0.0.1",
+	"description": "heroku-chat app",
+	"private": false,
+	"main": "app.js",
+	"dependencies": {
+    "socket.io": "0.9.16",
+	  "express": "3.2.6",
+	  "mongoose": "4.5.x",
+    "autolinker": "0.7.2",
+    "jsdom" : "7.x"
+  },
+	"engines": {
+      "node": "4.5.x"
+  },
+	"repository": {
+      "type": "git",
+      "url": "https://github.com/minimice/heroku-chat-app.git"
+  },
+  "keywords": [
+    "example",
+    "heroku"
+  ],
+  "author": "chooi-guan lim",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/minimice/heroku-chat-app/issues"
+  },
+  "homepage": "https://github.com/minimice/heroku-chat-app"
+}

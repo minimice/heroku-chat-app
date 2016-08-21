@@ -1,0 +1,292 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Super Cloud Chat</title>
+  <link href="/emoticons/support/skype/emoticons.css" rel="stylesheet" type="text/css"/>
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel="stylesheet" href="/css/signin.css">
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+  <style>
+      #chat {
+	      height: 100%;
+	  }
+	  #contentWrap {
+	      display: none;
+	  }
+	  .error {
+	      color: red;
+	  }
+	  .whisper {
+	      color: grey;
+		  font-style: italic;
+	  }
+  </style>
+</head>
+<body>
+  <div id="nickWrap">
+    <div style="width:100%; height:400px; background-color:white;">
+	  <div style="width:400px; height:400px; margin:0 auto; background: url('/images/cloud.jpg');background-repeat:no-repeat;">&nbsp;</div>
+	</div>
+    <div class="jumbotron">
+	  <div class="container">
+	  <form class="form-signin" role="form" id="setNick">
+	    <h2>Super Cloud Chat</h2>
+	    <p>Welcome! Enter your nickname to start.</p>
+	    <p id="nickError"></p>
+        <input class="form-control" id="nickname" placeholder="Enter your nickname" required autofocus/>
+        <br/>
+		<input class="form-control" id="room" value="Lobby" placeholder="Enter your room e.g. lobby" required/>
+        <br/>
+		<input id="sign-in" class="btn btn-lg btn-primary btn-block" type="submit" value="Go"/>
+      </form>
+	  </div>
+	</div>
+  </div>
+
+    <div id="contentWrap">
+	    <div class="row-fluid" style="height: 70%">
+		    <div class="col-sm-8">
+		        <div class="panel panel-primary">
+		          <div class="panel-heading">
+	                <h3 class="panel-title">Chat history for <span id="roomheader">a room</span></h3>
+	              </div>
+			      <div class="panel-body" style="background: url('/images/azure.jpg');">
+				    <div id="chat-scroll" style="overflow-y:scroll;">
+	                  <div id="chat"></div>
+				    </div>
+				    <br/>
+	                <form class="form-group" id="send-message">
+	                  <input placeholder="Enter your message" autofocus id="message" class="btn-block" autocomplete="off"></input>
+		              <input type="hidden" id="currentUser"/>
+	                </form>
+			      </div>
+		        </div>
+			</div>
+			<div class="col-sm-3">
+			  <div class="panel panel-default">
+		        <div class="panel-heading">
+	              <h3 class="panel-title">Users online</h3>
+	            </div>
+				<div class="panel-body">
+		          <div id="users"></div>
+				</div>
+			  </div>
+			  <div class="panel panel-info">
+		        <div class="panel-heading">
+	              <h4 class="panel-title">Settings</h4>
+	            </div>
+				<div class="panel-body">
+		          <input type="checkbox" id="alerts">&nbsp;Received message tone</input>
+				</div>
+			  </div>
+			</div>
+			<div class="col-sm-3" style="color:grey;">
+		      <div id="typingusers"></div>
+			</div>
+	    </div>
+    </div>
+
+  
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script type="text/javascript" src="/emoticons/lib/emoticons.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+  <script>
+      jQuery(function($) {
+      	var definition = {smile:{title:"Smile",codes:[":)",":=)",":-)"]},"sad-smile":{title:"Sad Smile",codes:[":(",":=(",":-("]},"big-smile":{title:"Big Smile",codes:[":D",":=D",":-D",":d",":=d",":-d"]},cool:{title:"Cool",codes:["8)","8=)","8-)","B)","B=)","B-)","(cool)"]},wink:{title:"Wink",codes:[":o",":=o",":-o",":O",":=O",":-O"]},crying:{title:"Crying",codes:[";(",";-(",";=("]},sweating:{title:"Sweating",codes:["(sweat)","(:|"]},speechless:{title:"Speechless",codes:[":|",":=|",":-|"]},kiss:{title:"Kiss",codes:[":*",":=*",":-*"]},"tongue-out":{title:"Tongue Out",codes:[":P",":=P",":-P",":p",":=p",":-p"]},blush:{title:"Blush",codes:["(blush)",":$",":-$",":=$",':">']},wondering:{title:"Wondering",codes:[":^)"]},sleepy:{title:"Sleepy",codes:["|-)","I-)","I=)","(snooze)"]},dull:{title:"Dull",codes:["|(","|-(","|=("]},"in-love":{title:"In love",codes:["(inlove)"]},"evil-grin":{title:"Evil grin",codes:["]:)",">:)","(grin)"]},talking:{title:"Talking",codes:["(talk)"]},yawn:{title:"Yawn",codes:["(yawn)","|-()"]},puke:{title:"Puke",codes:["(puke)",":&",":-&",":=&"]},"doh!":{title:"Doh!",codes:["(doh)"]},angry:{title:"Angry",codes:[":@",":-@",":=@","x(","x-(","x=(","X(","X-(","X=("]},"it-wasnt-me":{title:"It wasn't me",codes:["(wasntme)"]},party:{title:"Party!!!",codes:["(party)"]},worried:{title:"Worried",codes:[":S",":-S",":=S",":s",":-s",":=s"]},mmm:{title:"Mmm...",codes:["(mm)"]},nerd:{title:"Nerd",codes:["8-|","B-|","8|","B|","8=|","B=|","(nerd)"]},"lips-sealed":{title:"Lips Sealed",codes:[":x",":-x",":X",":-X",":#",":-#",":=x",":=X",":=#"]},hi:{title:"Hi",codes:["(hi)"]},call:{title:"Call",codes:["(call)"]},devil:{title:"Devil",codes:["(devil)"]},angel:{title:"Angel",codes:["(angel)"]},envy:{title:"Envy",codes:["(envy)"]},wait:{title:"Wait",codes:["(wait)"]},bear:{title:"Bear",codes:["(bear)","(hug)"]},"make-up":{title:"Make-up",codes:["(makeup)","(kate)"]},"covered-laugh":{title:"Covered Laugh",codes:["(giggle)","(chuckle)"]},"clapping-hands":{title:"Clapping Hands",codes:["(clap)"]},thinking:{title:"Thinking",codes:["(think)",":?",":-?",":=?"]},bow:{title:"Bow",codes:["(bow)"]},rofl:{title:"Rolling on the floor laughing",codes:["(rofl)"]},whew:{title:"Whew",codes:["(whew)"]},happy:{title:"Happy",codes:["(happy)"]},smirking:{title:"Smirking",codes:["(smirk)"]},nodding:{title:"Nodding",codes:["(nod)"]},shaking:{title:"Shaking",codes:["(shake)"]},punch:{title:"Punch",codes:["(punch)"]},emo:{title:"Emo",codes:["(emo)"]},yes:{title:"Yes",codes:["(y)","(Y)","(ok)"]},no:{title:"No",codes:["(n)","(N)"]},handshake:{title:"Shaking Hands",codes:["(handshake)"]},skype:{title:"Skype",codes:["(skype)","(ss)"]},heart:{title:"Heart",codes:["(h)","<3","(H)","(l)","(L)"]},"broken-heart":{title:"Broken heart",codes:["(u)","(U)"]},mail:{title:"Mail",codes:["(e)","(m)"]},flower:{title:"Flower",codes:["(f)","(F)"]},rain:{title:"Rain",codes:["(rain)","(london)","(st)"]},sun:{title:"Sun",codes:["(sun)"]},time:{title:"Time",codes:["(o)","(O)","(time)"]},music:{title:"Music",codes:["(music)"]},movie:{title:"Movie",codes:["(~)","(film)","(movie)"]},phone:{title:"Phone",codes:["(mp)","(ph)"]},coffee:{title:"Coffee",codes:["(coffee)"]},pizza:{title:"Pizza",codes:["(pizza)","(pi)"]},cash:{title:"Cash",codes:["(cash)","(mo)","($)"]},muscle:{title:"Muscle",codes:["(muscle)","(flex)"]},cake:{title:"Cake",codes:["(^)","(cake)"]},beer:{title:"Beer",codes:["(beer)"]},drink:{title:"Drink",codes:["(d)","(D)"]},dance:{title:"Dance",codes:["(dance)","\\o/","\\:D/","\\:d/"]},ninja:{title:"Ninja",codes:["(ninja)"]},star:{title:"Star",codes:["(*)"]},mooning:{title:"Mooning",codes:["(mooning)"]},finger:{title:"Finger",codes:["(finger)"]},bandit:{title:"Bandit",codes:["(bandit)"]},drunk:{title:"Drunk",codes:["(drunk)"]},smoking:{title:"Smoking",codes:["(smoking)","(smoke)","(ci)"]},toivo:{title:"Toivo",codes:["(toivo)"]},rock:{title:"Rock",codes:["(rock)"]},headbang:{title:"Headbang",codes:["(headbang)","(banghead)"]},bug:{title:"Bug",codes:["(bug)"]},fubar:{title:"Fubar",codes:["(fubar)"]},poolparty:{title:"Poolparty",codes:["(poolparty)"]},swearing:{title:"Swearing",codes:["(swear)"]},tmi:{title:"TMI",codes:["(tmi)"]},heidy:{title:"Heidy",codes:["(heidy)"]},myspace:{title:"MySpace",codes:["(MySpace)"]},malthe:{title:"Malthe",codes:["(malthe)"]},tauri:{title:"Tauri",codes:["(tauri)"]},priidu:{title:"Priidu",codes:["(priidu)"]}};
+
+          $.emoticons.define(definition);
+
+	      var socket = io.connect();
+		  var $nickForm = $('#setNick');
+		  var $nickError = $('#nickError');
+		  var $nickBox = $('#nickname');
+		  var $room = $('#room');
+		  var $roomheader = $('#roomheader');
+		  var $users = $('#users');
+		  var $typingusers = $('#typingusers')
+		  var $messageForm = $('#send-message');
+		  var $messageBox = $('#message');
+		  var $chat = $('#chat');
+		  var $currentUser = $('#currentUser');
+		  var $alerts = $('#alerts');
+
+		  var audioReceivedMessage = document.createElement('audio');
+          audioReceivedMessage.setAttribute('src', './audio/ding.wav');
+		  
+		  $nickForm.submit(function(e) {
+			  e.preventDefault();
+			  var cleanedName = escapeHtml($nickBox.val());
+			  var cleanedRoom = escapeHtml($room.val());
+			  var ind = cleanedName.indexOf(' ');
+		      if (ind !== -1) {
+			    $nickError.html('No spaces allowed in nickname!');
+				return;
+			  }
+			  if (cleanedName === '') {
+				$nickError.html('Enter a valid nickname!');
+				return;
+			  }
+			  if (cleanedRoom === '') {
+				$nickError.html('Enter a valid room name!');
+				return;
+			  }
+		      e.preventDefault();
+			  $("#sign-in").attr('disabled','disabled');
+			  $nickError.html('Wait... Signing in...');
+			  socket.emit('new user', {nick:cleanedName, room:cleanedRoom}, function(data) {
+			      if (data) {
+				    $('#nickWrap').hide();
+				    $('#contentWrap').show();
+					$("#sign-in").removeAttr('disabled');
+					$roomheader.text(cleanedRoom);
+					document.title = cleanedRoom + ' chat';
+				  } else {
+				    $nickError.html('That username is already taken! Try again.');
+					$("#sign-in").removeAttr('disabled');
+				  }
+			  });
+			  $nickBox.val('');
+		  });
+		
+		  socket.on('userid', function(data) {
+			$currentUser.val(data.nick);
+		  });
+		  
+		  socket.on('usernames', function(allUsers) {
+			var html = '';
+			var otherRoomUsers = 0;
+			for(var user in allUsers) {
+			  if (allUsers[user].nick === $currentUser.val()) {
+			    html += "* ";
+			  }
+			  if (allUsers[user].room === $room.val()) {
+				html += '<font color="' + allUsers[user].nickcolor + '">' + allUsers[user].nick + '</font><br/>';
+			  }
+			  else {
+				otherRoomUsers++;
+			  }
+			}
+			if (otherRoomUsers > 0) {
+				html += "<i> and " + otherRoomUsers + " user(s) in other rooms.</i>"
+			}
+			$users.html(html);
+		  });
+		  
+		  $messageForm.submit(function(e) {
+		      e.preventDefault();
+		      if ($messageBox.val().trim().length === 0) {
+		      	return;
+		      }
+			  socket.emit('send message', { msg: $messageBox.val(), room: $room.val() }, function(data) {
+				$chat.append('<span class="error"><b>' + data + "</b></span><br/>");
+			  });
+			  $messageBox.val('');
+		  });		
+		  //$messageBox.keypress(function(e) {
+			//  socket.emit('typing', $currentUser.val(), function(data) {
+			//	$chat.append('<span class="error"><b>' + data + "</b></span><br/>");
+			  //});
+		  //});
+		
+		 //$messageBox.keyup(function(e) {
+			//  socket.emit('stop typing', $currentUser.val(), function(data) {
+			//	$chat.append('<span class="error"><b>' + data + "</b></span><br/>");
+			  //});
+		  //});
+		  
+		  socket.on('load old msgs', function(docs) {
+		  	  // Disable loading of old messages for now
+		      //for (var i=docs.length-1; i>=0; i--) {
+			  //  displayOldMsg(docs[i]);
+			  //}
+		  });
+		
+		  socket.on('user connected', function(data) {
+	          displayMsgConnected(data);
+	          scrollToBottom();
+		  });
+		
+		  socket.on('user disconnected', function(data) {
+	          displayMsgDisconnected(data);
+	          if (data.nick === $currentUser.val()) {
+		          location.refresh();
+		      } else {
+			      scrollToBottom();
+		      }
+		  });
+		  
+		  socket.on('new message', function(data) {
+		      displayMsg(data);
+		      if ($alerts.is(':checked')) {
+		      	if (data.nick !== $currentUser.val()) {
+		      		audioReceivedMessage.play();
+		      	}
+		      }
+		      scrollToBottom();
+		  });
+		  
+		  function displayOldMsg(data) {
+		  	  var smileyMsg = $.emoticons.replace(data.msg);
+		      $chat.append('<span class="msg">' + data.created +' <b><font color="black">' + data.nick + ':</font></b> ' + smileyMsg + "</span><br/>");
+		  }
+		  
+		  function displayMsg(data) {
+		  	  var smileyMsg = $.emoticons.replace(data.msg);
+		      $chat.append('<span class="msg">' + data.created +' <b><font color="' + data.nickcolor + '">' + data.nick + ':</font></b> ' + smileyMsg + "</span><br/>");
+		  }
+		
+		  function displayMsgDisconnected(data) {
+			  if (data.room === $room.val()) {
+			    $chat.append('<span class="msg">** <i><font color="' + data.nickcolor + '">' + data.nick + '</font> has disconnected </i> **</span><br/>');
+			  }
+		  }
+		
+		  function displayMsgConnected(data) {
+			  if (data.room === $room.val()) {
+		        $chat.append('<span class="msg">** <i><font color="' + data.nickcolor + '">' + data.nick + '</font> has connected </i> **</span><br/>');
+		      }
+		  }
+		
+		  function scrollToBottom() {
+		      $("#chat-scroll").scrollTop($("#chat-scroll")[0].scrollHeight);
+		  }
+		  
+		  function escapeHtml(str) {
+              var div = document.createElement('div');
+              div.appendChild(document.createTextNode(str));
+              return div.innerHTML;
+          };
+
+		  socket.on('whisper', function(data) {
+		      $chat.append('<span class="whisper"><b>' + data.nick + ': </b>' + data.msg + "</span><br/>");
+		  });
+		  
+		  socket.on('whisper sent', function(data) {
+		      $chat.append('<span class="whisper"><b> You whispered </b>' + data.msg + " to " + data.nick + "</span><br/>");
+		  });
+		
+		  socket.on('typing users', function(allUsers) {
+			var html = '';
+			for(var user in allUsers) {
+			  if (allUsers[user].room === $room.val()) {
+				html += allUsers[user].nick + ' is typing...<br/>';
+			  }
+			}
+			$typingusers.html(html);
+		  });
+	  });
+  </script>
+</body>
+</html>
