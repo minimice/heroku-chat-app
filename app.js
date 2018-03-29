@@ -6,13 +6,13 @@
 //var play = require('play');
 var express = require('express'),
     app = express(),
-	server = require('http').createServer(app),
-	io = require('socket.io').listen(server),
-	mongoose = require('mongoose'),
-	thedocument = require("jsdom").jsdom(),
-	Autolinker = require( 'autolinker' ),
-	users = {},
-	typingusers = {};
+    server = require('http').createServer(app),
+    io = require('socket.io').listen(server),
+    mongoose = require('mongoose'),
+    thedocument = require("jsdom").jsdom(),
+    Autolinker = require( 'autolinker' ),
+    users = {},
+    typingusers = {};
 
 var port = Number(process.env.PORT || 3001);
 server.listen(port, function() {
@@ -37,8 +37,8 @@ mongoose.connect(url, function(err) {
 
 var chatSchema = mongoose.Schema({
     nick: String,
-	msg: String,
-	created: {type: Date, default: Date.now}
+    msg: String,
+    created: {type: Date, default: Date.now}
 });
 
 var Chat = mongoose.model('Message', chatSchema);
