@@ -1,2 +1,2 @@
 # heroku-chat-app
-Created during my time in Cisco Systems
+Created during my time in Cisco Systems.  Prototype app.
